@@ -6,6 +6,7 @@ import {
 	FileUploadRemoveFileBtn,
 	FileUploadPreview,
 	FileUploadDropzone,
+	FileUploadWrapper,
 } from "@/component/file-upload";
 import { ToggleTheme } from "@/component/toggel-theme";
 import { useThemeStore } from "@/store/useThemeStore";
@@ -18,14 +19,15 @@ export default function Home() {
 		<div className={`h-screen dark:bg-black card  ${theme}`}>
 			<div className="mt-4 w-full space-y-10 px-8 flex flex-col items-center">
 				<ToggleTheme />
-				<FileUploadDropzone onFileChange={setFiles} multiple>
+				<FileUploadWrapper>
+					<FileUploadDropzone onFileChange={setFiles} multiple />
 					<FileUpload onFileChange={setFiles}>
 						<FileUploadPreview files={files} />
 					</FileUpload>
 					<FileUploadInfo files={files}>
 						<FileUploadRemoveFileBtn onFileRemove={setFiles} />
 					</FileUploadInfo>
-				</FileUploadDropzone>
+				</FileUploadWrapper>
 			</div>
 		</div>
 	);

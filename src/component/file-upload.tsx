@@ -18,6 +18,10 @@ export type FileUploadProps = FileInputProps & {
 	onFileChange: (files: FilesProps) => void;
 };
 
+export type FileUploadWrapperProps = {
+	className?: string;
+} & ComponentProps<"div">;
+
 export type FileUploadPreviewProps = WithFiles & {
 	className?: string;
 } & ComponentProps<"div">;
@@ -34,9 +38,24 @@ export type FileUploadRemoveFileBtnProps = ComponentProps<"button"> & {
 
 export type FileUploadDropzoneProps = {
 	children?: ReactNode;
+	activeDragClassName?: string;
 	onFileChange: (file: FilesProps) => void;
 	className?: string;
 } & ComponentProps<"input">;
+
+export const FileUploadWrapper = ({
+	className,
+	children,
+}: FileUploadWrapperProps) => (
+	<div
+		className={twMerge(
+			"w-full max-w-100 flex flex-col items-center justify-center gap-3 border-gray-300 shadow-sm rounded-2xl p-4",
+			className,
+		)}
+	>
+		{children}
+	</div>
+);
 
 export const FileUpload = ({
 	children,
@@ -55,6 +74,7 @@ export const FileUpload = ({
 		<div className="flex justify-center items-center gap-2">
 			{children}
 			<input
+				aria-hidden="true"
 				ref={inputRef}
 				type="file"
 				className="hidden"
@@ -108,6 +128,8 @@ export const FileUploadPreview = ({
 			<Avatar.Root>
 				<Avatar.Image
 					className="rounded-xl size-10"
+					role="img"
+					aria-label={`File type: ${textFallBack}`}
 					src={(files.length < 2 && URL.createObjectURL(files[0])) || undefined}
 				/>
 				<Avatar.Fallback>{textFallBack}</Avatar.Fallback>
@@ -117,7 +139,6 @@ export const FileUploadPreview = ({
 };
 
 export const FileUploadInfo = ({
-	pProps,
 	files,
 	className,
 	children,
@@ -141,10 +162,11 @@ export const FileUploadInfo = ({
 	}, [files]);
 
 	return (
-		<div className={twMerge("mt-2 flex gap-4", className)} {...props}>
-			<p className={twMerge("dark:text-white", pProps?.className)} {...pProps}>
-				{fileName}
-			</p>
+		<div
+			className={twMerge("flex gap-4 dark:text-white", className)}
+			{...props}
+		>
+			<p aria-live="polite">{fileName}</p>
 			{children}
 		</div>
 	);
@@ -172,11 +194,12 @@ export const FileUploadRemoveFileBtn = ({
 export const FileUploadDropzone = ({
 	onFileChange,
 	children,
+	activeDragClassName = "border-gray-600 bg-gray-50",
 	className,
 	...props
 }: FileUploadDropzoneProps) => {
 	const inputRef = useRef<HTMLInputElement | null>(null);
-	const [isDragging, setIsDragging] = useState(true);
+	const [isDragging, setIsDragging] = useState(false);
 
 	const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
 		e.preventDefault();
@@ -202,31 +225,33 @@ export const FileUploadDropzone = ({
 	return (
 		<div
 			className={twMerge(
-				"w-full max-w-100 p-4 shadow-md border-gray-100 rounded-2xl space-y-4",
+				`h-40 w-full max-w-100 px-4 flex flex-col items-center justify-center rounded-2xl border border-dashed hover:border-gray-600 hover:bg-gray-50 mb-2 ${isDragging ? activeDragClassName : "border-gray-400"}`,
 				className,
 			)}
+			role="button"
+			aria-label="Upload area. Press Enter or click to select a file."
+			onClick={() => inputRef.current?.click()}
+			onDrop={handleDrop}
+			onDragOver={handleDragOver}
+			onDragEnter={handleDragOver}
+			onDragLeave={handleDragLeave}
 		>
-			<div
-				className="h-40 w-full px-4 flex flex-col items-center justify-center border border-dashed border-gray-400 rounded-2xl"
-				onClick={() => inputRef.current?.click()}
-				onDrop={handleDrop}
-				onDragOver={handleDragOver}
-				onDragEnter={handleDragOver}
-				onDragLeave={handleDragLeave}
-			>
-				<input
-					ref={inputRef}
-					type="file"
-					className="hidden"
-					onChange={(e) => onFileChange(e.target.files)}
-					{...props}
-				/>
-				<p className="font-semibold">Choose a file </p>
-				<p className="text-gray-500 text-sm">drag and drop it here</p>
-			</div>
-			<div className="flex flex-col items-center justify-center">
-				{children}
-			</div>
+			<input
+				ref={inputRef}
+				type="file"
+				className="hidden"
+				onChange={(e) => onFileChange(e.target.files)}
+				aria-hidden="true"
+				{...props}
+			/>
+			{children ? (
+				children
+			) : (
+				<>
+					<p className="font-semibold">Choose a file </p>
+					<p className="text-gray-500 text-sm">drag and drop it here</p>
+				</>
+			)}
 		</div>
 	);
 };
